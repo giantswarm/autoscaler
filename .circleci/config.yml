@@ -1,0 +1,96 @@
+version: 2.1
+
+
+
+executors:
+  workspace:
+    working_directory: /workspace
+
+jobs:
+  build:
+    executor: workspace
+    docker:
+      - image: "golang:1.14"
+
+    environment:
+      IMAGE_NAME: cluster-autoscaler-giantswarm
+
+    steps:
+      - checkout
+
+      - run:
+          name: Test and Build
+          command: |
+            cd cluster-autoscaler
+            go build -o cluster-autoscaler
+
+      - persist_to_workspace:
+          root: cluster-autoscaler
+          paths:
+            - ./
+
+  dockerbuild:
+    executor: workspace
+    docker:
+      - image: "docker:19.03.13-git"
+
+    environment:
+      IMAGE_NAME: cluster-autoscaler-giantswarm
+
+    steps:
+      - setup_remote_docker:
+          version: 19.03.13
+
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /workspace/cluster-autoscaler
+
+      - run:
+          name: Docker build
+          command: |
+            cd /workspace/cluster-autoscaler
+            docker build -t quay.io/giantswarm/$IMAGE_NAME:$CIRCLE_SHA1 .
+
+      - run:
+          name: Docker login
+          command: |
+            echo -n "${QUAY_PASSWORD}" | docker login --username "${QUAY_USERNAME}" --password-stdin quay.io
+
+      - run:
+          name: Docker push (SHA1 tag)
+          command: |
+            docker push quay.io/giantswarm/$IMAGE_NAME:$CIRCLE_SHA1
+
+      - run:
+          name: Docker push release (only for a tagged release)
+          command: |
+            if [ ! -z "${CIRCLE_TAG}" ] && [ -z "${CIRCLE_BRANCH}" ]
+            then
+                docker tag quay.io/giantswarm/$IMAGE_NAME:$CIRCLE_SHA1 quay.io/giantswarm/$IMAGE_NAME:$CIRCLE_TAG
+                docker push quay.io/giantswarm/$IMAGE_NAME:$CIRCLE_TAG
+
+                # China
+                echo -n "${ALIYUN_PASSWORD}" | docker login --username "${ALIYUN_USERNAME}" --password-stdin registry-intl.cn-shanghai.aliyuncs.com
+                docker tag quay.io/giantswarm/$IMAGE_NAME:$CIRCLE_SHA1 registry-intl.cn-shanghai.aliyuncs.com/giantswarm/$IMAGE_NAME:$CIRCLE_TAG
+                docker push registry-intl.cn-shanghai.aliyuncs.com/giantswarm/$IMAGE_NAME:$CIRCLE_TAG
+            else
+                echo "Not pushing release tag"
+            fi
+
+workflows:
+  version: 2
+  build-and-push:
+    jobs:
+      - build:
+          filters:
+            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
+      - dockerbuild:
+          context: architect
+          requires:
+            - build
+          filters:
+            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
