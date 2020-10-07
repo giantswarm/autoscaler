@@ -22,7 +22,7 @@ jobs:
           name: Test and Build
           command: |
             cd cluster-autoscaler
-            go build -o cluster-autoscaler
+            GOOS=linux go build -o cluster-autoscaler
 
       - persist_to_workspace:
           root: cluster-autoscaler
