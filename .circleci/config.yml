@@ -2,16 +2,13 @@ version: 2.1
 
 jobs:
   dockerbuild:
-    docker:
-      - image: "docker:19.03.13-git"
+    machine:
+      - image: "ubuntu-2004:202008-01"
 
     environment:
       IMAGE_NAME: cluster-autoscaler-giantswarm
 
     steps:
-      - setup_remote_docker:
-          version: 19.03.13
-
       - checkout
 
       - run:
