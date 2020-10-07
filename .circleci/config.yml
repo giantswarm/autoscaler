@@ -17,6 +17,7 @@ jobs:
       - run:
           name: Test and Build
           command: |
+            apk add --update make
             cd cluster-autoscaler
             make build-in-docker
 
