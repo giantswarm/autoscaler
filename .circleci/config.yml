@@ -2,7 +2,6 @@ version: 2.1
 
 jobs:
   dockerbuild:
-    executor: workspace
     docker:
       - image: "docker:19.03.13-git"
 
