@@ -20,6 +20,7 @@ jobs:
       - run:
           name: Docker build
           command: |
+            cd cluster-autoscaler
             docker build -t quay.io/giantswarm/$IMAGE_NAME:$CIRCLE_SHA1 .
 
       - run:
