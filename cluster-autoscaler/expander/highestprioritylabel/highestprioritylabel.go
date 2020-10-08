@@ -60,6 +60,8 @@ func (ps *priority) BestOption(expansionOptions []expander.Option, nodeInfo map[
 			klog.Warningf("Priority not set, using 0 for %s", option.NodeGroup.Id())
 		}
 
+		klog.Infof("ASG %s found with priority %d", option.NodeGroup.Id(), scalingPriority)
+
 		// disregard node group if it has a lower priority than the current highest priority.
 		if scalingPriority < highestPriority {
 			continue
@@ -75,6 +77,8 @@ func (ps *priority) BestOption(expansionOptions []expander.Option, nodeInfo map[
 		// add node group to options
 		priorityOptions = append(priorityOptions, option)
 	}
+
+	klog.Infof("Selecting random node from %v", priorityOptions)
 
 	// Pick and forward node group with the highest priority to the fallback strategy
 	if len(priorityOptions) > 0 {
