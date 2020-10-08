@@ -17,7 +17,6 @@ limitations under the License.
 package factory
 
 import (
-	"github.com/giantswarm/autoscaler/cluster-autoscaler/expander/highestprioritylabel"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/context"
 	"k8s.io/autoscaler/cluster-autoscaler/expander"
